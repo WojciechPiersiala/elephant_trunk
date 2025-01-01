@@ -1,6 +1,8 @@
 import numpy as np
 import math
 
+
+
 class Segment():
     def __init__(self, r :int, position :list[float, float]=[0.0, 0.0], orientation :float=np.pi, k :float=0, color :str='-b', width :int=2):
         #style
@@ -28,6 +30,7 @@ class Segment():
         self.orientation_end = 0
 
         self.update(k)
+        self.k = k
 
 
 
@@ -49,6 +52,9 @@ class Segment():
             self.orientation = orientation
             
         self.k += dk
+
+        K_LIM = 0.2
+        self.k = max(-K_LIM, min(self.k, K_LIM))
         if self.k == 0:
             self.k = 1e-6  # Use a small non-zero curvature
         
