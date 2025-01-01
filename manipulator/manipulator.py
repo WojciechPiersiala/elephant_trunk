@@ -5,8 +5,8 @@ from pynput.keyboard import Key, Listener
 
 
 class Manipulator():
-    def __init__(self, manual_mode :bool=True, target_cor :list[float,float]=[0.0, 0.0], render_mode :str = "human"):
-        self.render_modes = ["human", "rgb"]
+    def __init__(self, manual_mode :bool=True, target_cor :list[float,float]=[0.0, 0.0], render_mode :str = "human", max_steps = 50):
+        self.render_modes = ["human", "rgb_array"]
 
         self.render_mode = render_mode
         assert render_mode in self.render_modes, f"tender mode incorrect. Correct render modes: {self.render_modes}"
@@ -59,6 +59,11 @@ class Manipulator():
         self.action_space = [0, 0, 0, 0] # each element in this vector specifies the curvature update k of a single segment
         self.state_space = [[0, 0], [0, 0]] # first elemnt contains the coordinates of the end effector and secod the coordinates of the target
 
+        # manipulator temination after too many steps
+        self.max_steps = max_steps
+        self.step_number = 0
+        self.terminate = False
+
 
 
     def run(self, action_space :list[float,float,float,float]=[0,0,0,0]):
@@ -104,21 +109,28 @@ class Manipulator():
 
 
     def track_target(self):
+        DIST_TO_TARGET_OK = 0.5
+        self.step_number += 1
         self.end_effector_x = self.segments[3].x_end
         self.end_effector_y = self.segments[3].y_end
         self.dist_to_target = np.sqrt((self.end_effector_x - self.target_cor[0])**2 +  (self.end_effector_y - self.target_cor[1])**2)
         # print(f"end effector: [{self.end_effector_x}, {self.end_effector_y}], \t target: {self.target_cor}, \t dist: {self.dist_to_target}")
 
         self.state_space = [[self.end_effector_x, self.end_effector_y],self.target_cor]
-        DIST_TO_TARGET_OK = 0.5
         if self.dist_to_target < DIST_TO_TARGET_OK:
             self.on_target = True
+            # print("done")
+
+        # print(f"remaining steps: {MAX_STEPS-self.step_number}")
+        if self.step_number > self.max_steps:
+            self.terminate = True
+            # print("trunctuated")
 
 
 
     def manual_move(self,key):
-        # print(f"Key {key} pressed")
         SK_STEP = 0.003
+        # print(f"Key {key} pressed")
         # change the index
         if key == Key.up:
             self.seg_idx += 1
@@ -137,3 +149,9 @@ class Manipulator():
         elif key == Key.right:
             self.dk =- SK_STEP
             self.move = True
+
+
+
+    def close(self):
+        """Close the matplotlib figure to avoid duplicate plots."""
+        plt.close(self.fig)
