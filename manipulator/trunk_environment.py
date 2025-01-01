@@ -57,10 +57,10 @@ class TrunkEnv(gym.Env):
         
         # reward
         reward = -self.manipulator.dist_to_target
-        # if self.manipulator.on_target:
-        #     reward += 100
-        # elif self.manipulator.terminate:
-        #     reward -= 100
+        if self.manipulator.on_target:
+            reward += 100
+        elif self.manipulator.terminate:
+            reward -= 100
 
         done = self.manipulator.on_target
         truncated = self.manipulator.terminate

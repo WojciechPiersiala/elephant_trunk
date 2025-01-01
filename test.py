@@ -80,7 +80,7 @@ class TrunkAgent:
         self.epsilon = max(self.epsilon - self.epsilon_decay, self.final_epsilon)
 
 # Hyperparameters
-learning_rate = 0.1
+learning_rate = 0.01
 n_episodes = 500
 start_epsilon = 1.0
 final_epsilon = 0.05
@@ -105,7 +105,7 @@ else:
 
 # Environment setup
 env = gym.make("TrunkManipulator-v0", render_mode="rgb_array", max_steps=100)
-env = gym.wrappers.RecordVideo(env, video_folder="trunk-agent", name_prefix="eval", episode_trigger=lambda x: x == n_episodes or x == 1)
+env = gym.wrappers.RecordVideo(env, video_folder="trunk-agent", name_prefix="eval", episode_trigger=lambda x: x == n_episodes or x == 0)
 env = gym.wrappers.RecordEpisodeStatistics(env=env)
 agent = TrunkAgent(env=env, learning_rate=learning_rate, epsilon=start_epsilon, epsilon_decay=epsilon_decay, final_epsilon=final_epsilon)
 
@@ -147,6 +147,51 @@ ax[2].set_ylabel("Length")
 plt.tight_layout()
 plt.show()
 
+
+# Evaluate the agent
+total_rewards = []
+for _ in range(100):  # Evaluate for 100 episodes
+    obs, info = env.reset()
+    episode_reward = 0
+    done = False
+    while not done:
+        action = agent.get_action(obs)
+        obs, reward, terminated, truncated, info = env.step(action)
+        episode_reward += reward
+        done = terminated or truncated
+    total_rewards.append(episode_reward)
+
+print(f"Average reward over 100 evaluation episodes: {np.mean(total_rewards)}")
+
+
+from IPython.display import HTML
+
+obs, info = env.reset()
+episode_over = False
+while not episode_over:
+    action = env.action_space.sample()  # replace with actual agent
+    obs, reward, terminated, truncated, info = env.step(action)
+
+    episode_over = terminated or truncated
+
+video_path1 = 'trunk-agent/eval-episode-' + str(n_episodes) + '.mp4'
+video_path2 = 'trunk-agent/eval-episode-' + str(1) + '.mp4'
+
+# Embed both videos in a single HTML block
+HTML(f"""
+<div style="display: flex; justify-content: space-around; align-items: center;">
+    <video width="640" height="480" controls autoplay loop muted>
+      <source src="{video_path2}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <p>First Episode</p>
+    <video width="640" height="480" controls autoplay loop muted>
+      <source src="{video_path1}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <p>Last episode</p>
+</div>
+""")
 
 # Close the environment
 # env.close()
