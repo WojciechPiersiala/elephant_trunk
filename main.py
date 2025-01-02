@@ -8,7 +8,12 @@ import random
 import time
 
 def main():
-    rgb_array = False
+
+    register = False
+    if register:
+        env = TrunkEnv()
+        exit()
+    rgb_array = False # if false use human mode
     if rgb_array:
         env = gym.make("TrunkManipulator-v0", render_mode="rgb_array", max_steps=50)
         env = gym.wrappers.RecordVideo(env, video_folder="trunk-episodes", name_prefix="eval", episode_trigger=lambda x: x == 0)

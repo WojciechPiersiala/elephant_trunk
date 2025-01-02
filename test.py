@@ -1,13 +1,15 @@
 #!/home/wp/Studia/soft_robotics/elephant_trunk/trunk/bin/python
+# Enable Interactive Plots
+#%matplotlib inline
 import gymnasium as gym
 import numpy as np
 from tqdm import tqdm
 from collections import defaultdict
+from matplotlib import pyplot as plt
 import os
 import shutil
-from matplotlib import pyplot as plt
-from manipulator.manipulator import Manipulator
-from manipulator.trunk_environment import TrunkEnv
+from manipulator.trunk_environment import TrunkEnv  # Import TrunkEnv
+
 
 class TrunkAgent:
     def __init__(self, env: gym.Env, learning_rate: float, epsilon: float, epsilon_decay: float, final_epsilon: float, discount_factor: float = 0.95):
@@ -30,7 +32,7 @@ class TrunkAgent:
         ]
 
         # Discretize the action space
-        ACTION_BINS = 10
+        ACTION_BINS = 20
         self.action_bins = [
             np.linspace(self.env.action_space.low[i], self.env.action_space.high[i], ACTION_BINS)
             for i in range(self.env.action_space.shape[0])
@@ -76,15 +78,16 @@ class TrunkAgent:
         self.q_values[tp_obs][action_idx] += self.lr * temporal_difference
         self.training_error.append(float(temporal_difference))
 
+
     def decay_epsilon(self):
         self.epsilon = max(self.epsilon - self.epsilon_decay, self.final_epsilon)
 
 # Hyperparameters
 learning_rate = 0.01
-n_episodes = 500
+n_episodes = 5000
 start_epsilon = 1.0
 final_epsilon = 0.05
-epsilon_decay = start_epsilon / (n_episodes / 2)
+epsilon_decay = start_epsilon / (n_episodes)
 
 # Path to the folder
 folder_path = "./trunk-agent"
@@ -117,18 +120,22 @@ for episode in tqdm(range(n_episodes)):
     episode_td_error = []
     while not done:
         action = agent.get_action(obs)
+        # print(f"action : {action}")
         next_obs, reward, terminated, truncated, info = env.step(action)
         agent.update(action=action, obs=obs, next_obs=next_obs, reward=reward, terminated=terminated)
         obs = next_obs
         done = terminated or truncated
         episode_td_error.append(agent.training_error[-1])
+
+        # if episode % 100 == 0:
+        #     print(f"Episode {episode}, Reward: {sum(env.return_queue)}, Epsilon: {agent.epsilon}")
     episode_td_errors.append(np.mean(episode_td_error))
     agent.decay_epsilon()
 
 # Plotting the training error
-env.close()
+plt.close('all')
 rolling_mean = np.convolve(episode_td_errors, np.ones(1) / 1, mode='valid')
-fig, ax = plt.subplots(3,1,figsize=(10, 12))
+fig1, ax = plt.subplots(3,1,figsize=(10, 12))
 ax[0].plot(rolling_mean)
 ax[0].set_title("Training Error")
 ax[0].set_xlabel("Episode")
@@ -146,52 +153,4 @@ ax[2].set_ylabel("Length")
 
 plt.tight_layout()
 plt.show()
-
-
-# Evaluate the agent
-total_rewards = []
-for _ in range(100):  # Evaluate for 100 episodes
-    obs, info = env.reset()
-    episode_reward = 0
-    done = False
-    while not done:
-        action = agent.get_action(obs)
-        obs, reward, terminated, truncated, info = env.step(action)
-        episode_reward += reward
-        done = terminated or truncated
-    total_rewards.append(episode_reward)
-
-print(f"Average reward over 100 evaluation episodes: {np.mean(total_rewards)}")
-
-
-from IPython.display import HTML
-
-obs, info = env.reset()
-episode_over = False
-while not episode_over:
-    action = env.action_space.sample()  # replace with actual agent
-    obs, reward, terminated, truncated, info = env.step(action)
-
-    episode_over = terminated or truncated
-
-video_path1 = 'trunk-agent/eval-episode-' + str(n_episodes) + '.mp4'
-video_path2 = 'trunk-agent/eval-episode-' + str(1) + '.mp4'
-
-# Embed both videos in a single HTML block
-HTML(f"""
-<div style="display: flex; justify-content: space-around; align-items: center;">
-    <video width="640" height="480" controls autoplay loop muted>
-      <source src="{video_path2}" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-    <p>First Episode</p>
-    <video width="640" height="480" controls autoplay loop muted>
-      <source src="{video_path1}" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-    <p>Last episode</p>
-</div>
-""")
-
-# Close the environment
-# env.close()
+env.close()

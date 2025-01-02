@@ -4,7 +4,7 @@ register(
     id="TrunkManipulator-v0",
     entry_point="manipulator.trunk_environment:TrunkEnv",
 )
-# print(f"registerd as :TrunkManipulator")
+print(f"registerd as :TrunkManipulator")
 
 
 # register(

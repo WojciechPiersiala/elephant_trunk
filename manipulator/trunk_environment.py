@@ -34,7 +34,7 @@ class TrunkEnv(gym.Env):
         low = np.array([-20, -30, -20, -30])  # [x_effector, y_effector, x_target, y_target]
         high = np.array([20, 0, 20, 0])
         self.observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
-    
+
 
 
     def reset(self, seed=None, options=None):
@@ -55,12 +55,12 @@ class TrunkEnv(gym.Env):
         self.manipulator.run(action_space=action)
         observation = np.concatenate(self.manipulator.state_space, dtype=np.float32)
         
-        # reward
-        reward = -self.manipulator.dist_to_target
+        # reward = -self.manipulator.dist_to_target
+        reward = 0
         if self.manipulator.on_target:
-            reward += 100
+            reward += 100  # Large reward for success
         elif self.manipulator.terminate:
-            reward -= 100
+            reward -= 50  # Penalty for truncation
 
         done = self.manipulator.on_target
         truncated = self.manipulator.terminate
