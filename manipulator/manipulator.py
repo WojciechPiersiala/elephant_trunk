@@ -5,7 +5,7 @@ from pynput.keyboard import Key, Listener
 
 
 class Manipulator():
-    def __init__(self, manual_mode :bool=True, target_cor :list[float,float]=[0.0, 0.0], render_mode :str = "human", max_steps = 50):
+    def __init__(self, max_steps, target_cor :list[float,float], manual_mode :bool=True, render_mode :str = "human"):
         self.render_modes = ["human", "rgb_array"]
 
         self.render_mode = render_mode
@@ -57,7 +57,7 @@ class Manipulator():
 
         # normal mode
         self.action_space = [0, 0, 0, 0] # each element in this vector specifies the curvature update k of a single segment
-        self.state_space = [[0, 0], [0, 0]] # first elemnt contains the coordinates of the end effector and secod the coordinates of the target
+        self.state_space = [[0, 0], [0, 0], [0,0,0,0]] # first elemnt contains the coordinates of the end effector and secod the coordinates of the target
 
         # manipulator temination after too many steps
         self.max_steps = max_steps
@@ -93,7 +93,6 @@ class Manipulator():
             self.segments[0].update(self.action_space[0])
             # print(f"k: {self.segments[0].k}")
             self.arc0.set_data(self.segments[0].transformed_x, self.segments[0].transformed_y)
-
             self.segments[1].update(self.action_space[1],
                                     [self.segments[0].x_end, self.segments[0].y_end],
                                     self.segments[0].orientation_end)
@@ -116,7 +115,13 @@ class Manipulator():
         self.dist_to_target = np.sqrt((self.end_effector_x - self.target_cor[0])**2 +  (self.end_effector_y - self.target_cor[1])**2)
         # print(f"end effector: [{self.end_effector_x}, {self.end_effector_y}], \t target: {self.target_cor}, \t dist: {self.dist_to_target}")
 
-        self.state_space = [[self.end_effector_x, self.end_effector_y],self.target_cor]
+        # get curvatures
+        curvatures = []
+        for i in range(4):
+            k = self.segments[i].k
+            curvatures.append(k)
+
+        self.state_space = [[self.end_effector_x, self.end_effector_y],self.target_cor, curvatures]
         if self.dist_to_target < DIST_TO_TARGET_OK:
             self.on_target = True
             # print("done")
