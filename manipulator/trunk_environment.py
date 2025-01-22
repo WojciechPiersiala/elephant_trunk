@@ -17,7 +17,7 @@ class TrunkEnv(gym.Env):
         # matplotlib.use('Agg')  # Use the Agg backend for rendering
 
         # choose render mode
-        assert render_mode in self.metadata["render_modes"], f"Invalid render mode, correct render modes : {self.metadata["render_modes"]}"
+        assert render_mode in self.metadata["render_modes"], f'Invalid render mode, correct render modes : {self.metadata["render_modes"]}'
         self.render_mode = render_mode
 
         self.target = target

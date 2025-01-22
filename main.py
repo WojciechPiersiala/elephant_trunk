@@ -1,4 +1,4 @@
-#!/home/wp/Studia/soft_robotics/elephant_trunk/trunk/bin/python
+#!/home/ima/Studia/miekka_robotyka/elephant_trunk/trunk/bin/python
 #Enable Interactive Plots
 
 # %matplotlib inline
